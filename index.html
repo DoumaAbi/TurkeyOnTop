@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IP-Adresse Anzeige</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            overflow: hidden;
+        }
+
+        .container {
+            text-align: center;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 3rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            max-width: 90%;
+            width: 600px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .ip-display {
+            font-size: 4rem;
+            font-weight: bold;
+            margin: 2rem 0;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .ip-display:hover {
+            transform: scale(1.05);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .info {
+            margin-top: 2rem;
+            font-size: 1.2rem;
+            opacity: 0.8;
+        }
+
+        .loading {
+            font-size: 1.5rem;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+
+        .copy-btn {
+            margin-top: 1.5rem;
+            padding: 0.8rem 1.5rem;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s;
+        }
+
+        .copy-btn:hover {
+            background: #45a049;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            background: #4CAF50;
+            color: white;
+            border-radius: 5px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .notification.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Ihre IP-Adresse</h1>
+        <div id="ipDisplay" class="ip-display loading">Wird geladen...</div>
+        <button id="copyBtn" class="copy-btn" style="display: none;">IP-Adresse kopieren</button>
+        <div class="info">
+            Diese Webseite zeigt Ihre öffentliche IP-Adresse an
+        </div>
+    </div>
+    
+    <div id="notification" class="notification">IP-Adresse kopiert!</div>
+
+    <script>
+        // IP-Adresse abrufen
+        async function fetchIP() {
+            try {
+                // Zwei verschiedene Dienste für bessere Zuverlässigkeit
+                const response = await fetch('https://api.ipify.org?format=json');
+                const data = await response.json();
+                displayIP(data.ip);
+            } catch (error) {
+                console.error('Fehler beim Abrufen der IP:', error);
+                // Fallback-Dienst
+                try {
+                    const response = await fetch('https://api64.ipify.org?format=json');
+                    const data = await response.json();
+                    displayIP(data.ip);
+                } catch (error2) {
+                    console.error('Auch der Fallback-Dienst ist fehlgeschlagen:', error2);
+                    document.getElementById('ipDisplay').textContent = 'Fehler beim Laden der IP';
+                    document.getElementById('ipDisplay').classList.remove('loading');
+                }
+            }
+        }
+
+        // IP-Adresse anzeigen
+        function displayIP(ip) {
+            const ipDisplay = document.getElementById('ipDisplay');
+            ipDisplay.textContent = ip;
+            ipDisplay.classList.remove('loading');
+            
+            // Kopier-Button anzeigen
+            document.getElementById('copyBtn').style.display = 'inline-block';
+        }
+
+        // IP-Adresse kopieren
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showNotification();
+            }).catch(err => {
+                console.error('Fehler beim Kopieren: ', err);
+            });
+        }
+
+        // Benachrichtigung anzeigen
+        function showNotification() {
+            const notification = document.getElementById('notification');
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 2000);
+        }
+
+        // Event-Listener für den Kopier-Button
+        document.getElementById('copyBtn').addEventListener('click', function() {
+            const ip = document.getElementById('ipDisplay').textContent;
+            copyToClipboard(ip);
+        });
+
+        // IP-Adresse beim Laden der Seite abrufen
+        document.addEventListener('DOMContentLoaded', fetchIP);
+    </script>
+</body>
+</html>
